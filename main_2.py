@@ -32,6 +32,7 @@ red = (255, 0, 0)
 green = (0, 200, 0)
 bright_red = (255, 0, 0)
 bright_green = (0, 255, 0)
+yellow = (246, 235, 14)
 pause = False
 
 car_width = 73
@@ -112,6 +113,13 @@ def text_objects(text, font):
 def things(thingx, thingy, thingh, thingw, color):
     pygame.draw.rect(gameDisplay, color, [thingx, thingy, thingh, thingw])
 
+#yellow point blocks
+def yellow_b(thingx, thingy, thingh, thingw, color):
+    pygame.draw.rect(gameDisplay, color, [thingx, thingy, thingh, thingw])
+
+#to show red blocks
+def r_block(thingx, thingy, thingh, thingw, color):
+    pygame.draw.rect(gameDisplay, color, [thingx, thingy, thingh, thingw])
 
 # to display a message to screen
 def message_display(text):
@@ -154,6 +162,14 @@ def game_loop():
     x_change = 0
     aiX_change = 0
     thing_startx = random.randrange(0, display_width)
+    r_block_x = random.randrange(0, display_width)
+    r_block_y = -800
+    r_width = 100
+    r_height = 50
+    yellow_b_y = -2000
+    yellow_b_x = random.randrange(0, display_width)
+    y_width = r_width/2
+    y_height = r_height/3
     thing_starty = -600
     thing_speed = speed
     thing_width = 100
@@ -164,6 +180,7 @@ def game_loop():
     gameExit = False
 
     while not gameExit:
+        
         # this creates a list of events per frame
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -181,8 +198,14 @@ def game_loop():
         x += x_change
         gameDisplay.fill(green)
 
+
+        
         things(thing_startx, thing_starty, thing_width, thing_height, black)
+        r_block(r_block_x, r_block_y, r_width, r_height, red)
+        yellow_b(yellow_b_x, yellow_b_y, y_width, y_height, yellow)
         thing_starty += thing_speed
+        r_block_y += (speed*1.2)
+        yellow_b_y += (speed*1.4)
         things_doged(doged)
         ai_things_doged(aiDoged)
         car(x, y)
@@ -191,19 +214,34 @@ def game_loop():
             crash()
         # by this we know that the block is off the screen
         if thing_starty > display_height:
-            # so that the user gets a moment when the new block comes in
-            # thing_starty = 0 - thing_height
-            # thing_startx = random.randrange(0 , display_width)
-            # thing_width = random.randrange(100,200)
             if doged % 10 == 0:
                 thing_speed = thing_speed + 1
             doged = doged + 1
 
         if y < thing_starty + thing_height:
-            print('y cross over')
+            print("y cross over")
             if x > thing_startx and x < thing_startx + thing_width or x + car_width > thing_startx and x + car_width < thing_startx + thing_width:
                 print('x cross over')
                 crash()
+
+        #crash with red block
+        if y < r_block_y + r_height:
+            #print("y cross over")
+            if x > r_block_x and x < r_block_x + r_width or x + car_width > r_block_x and x + car_width < r_block_x + r_width:
+                #print('x cross over')
+                doged=doged-2
+                r_block_y = -2000
+                r_block_x = random.randrange(0 , display_width)
+        #yellow points
+        if y < yellow_b_y + y_height:
+            
+            if x > yellow_b_x and x < yellow_b_x + y_width or x + car_width > yellow_b_x and x + car_width < yellow_b_x + y_width:
+                #print('x cross over')
+                doged=doged+5
+                yellow_b_y = -3000
+                yellow_b_x = random.randrange(0 , display_width)
+            
+
 
         # AI_Part
         print('thing start: ', thing_startx)
@@ -223,8 +261,7 @@ def game_loop():
         aiX += aiX_change
         # gameDisplay.fill(white)
 
-        # things(thing_startx, thing_starty, thing_width, thing_height, black)
-        # thing_starty += thing_speed
+        
         ai_things_doged(aiDoged)
         aiCar(aiX, aiY)
 
@@ -239,11 +276,34 @@ def game_loop():
             # so that the user gets a moment when the new block comes in
             thing_starty = 0 - thing_height
             thing_startx = random.randrange(0, display_width)
-            thing_width = random.randrange(100, 200)
-            # if aiDoged % 10 == 0:
-            # thing_speed = thing_speed + 1
-            aiDoged = aiDoged + 1
-        # ai_things_doged(aiDoged)
+            thing_width = random.randrange(100, 150)
+            aiDoged = aiDoged + 1 # ai_things_doged(aiDoged)
+        
+        #ai with red block
+        if aiY < r_block_y + r_height:
+            #print("y cross over")
+            if aiX > r_block_x and aiX < r_block_x + r_width or aiX + car_width > r_block_x and aiX + car_width < r_block_x + r_width:
+                #print('x cross over')
+                aiDoged = aiDoged - 2
+                r_block_y = -2000
+                r_block_x = random.randrange(0 , display_width)
+
+        #points for ai
+        if aiY < yellow_b_y + y_height:
+            
+            if aiX > yellow_b_x and aiX < yellow_b_x + y_width or aiX + car_width > yellow_b_x and aiX + car_width < yellow_b_x + y_width:
+                #print('x cross over')
+                aiDoged = aiDoged+5
+                yellow_b_y = -3000
+                yellow_b_x = random.randrange(0 , display_width)   
+
+        # red or yellow block pass without being catched
+        if yellow_b_y > display_height:
+            yellow_b_y = -3000
+            yellow_b_x = random.randrange(0 , display_width) 
+        elif r_block_y > display_height:
+            r_block_y = -2000
+            r_block_x = random.randrange(0 , display_width)
 
         if aiY < thing_starty + thing_height:
             # print('y cross over')
