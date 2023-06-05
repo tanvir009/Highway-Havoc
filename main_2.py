@@ -2,6 +2,7 @@ import pygame
 import time
 import random
 import sys
+import math
 # initializing the game
 pygame.init()
 
@@ -33,6 +34,7 @@ green = (0, 200, 0)
 bright_red = (255, 0, 0)
 bright_green = (0, 255, 0)
 yellow = (246, 235, 14)
+blue = (9, 84, 243)
 pause = False
 
 car_width = 73
@@ -93,14 +95,33 @@ def message(text, textSize, textColor, textCenterPos):
 #
 def things_doged(count):
     font = pygame.font.SysFont(None, 25)
-    text = font.render("Human : " + str(count), True, black)
-    gameDisplay.blit(text, (0, 0))
+    text1 = font.render("Human : " + str(count), True, black)
+    gameDisplay.blit(text1, (0, 0))
+
+
 
 
 def ai_things_doged(count):
     font = pygame.font.SysFont(None, 25)
     text = font.render("AI : " + str(count), True, black)
     gameDisplay.blit(text, (100, 0))
+
+#shield
+def sheild(c1,c2):
+    hs = 0
+    ais = 0
+    font = pygame.font.SysFont(None, 25)
+    m = (c1 - c2)/10
+    n = (c2 - c1)/10
+    if m >= 1:
+        hs += math.floor(m)
+    elif n >= 1:
+        ais += math.floor(n)
+    text1 = font.render("Human_Shield : " + str(hs), True, blue)
+    gameDisplay.blit(text1, (0, 20))
+    text2 = font.render("AI_Shield : " + str(ais), True, blue)
+    gameDisplay.blit(text2, (0, 40))
+    return hs,ais
 
 
 def text_objects(text, font):
@@ -211,18 +232,30 @@ def game_loop():
         car(x, y)
 
         if x > display_width - car_width or x < 0:
-            crash()
+            if hs >= 1:
+                print("human used a shield")
+                hs -= 1
+                doged -= 5
+            else:
+                crash()
         # by this we know that the block is off the screen
         if thing_starty > display_height:
             if doged % 10 == 0:
-                thing_speed = thing_speed + 1
+                thing_speed = thing_speed + 2
             doged = doged + 1
 
         if y < thing_starty + thing_height:
             print("y cross over")
             if x > thing_startx and x < thing_startx + thing_width or x + car_width > thing_startx and x + car_width < thing_startx + thing_width:
                 print('x cross over')
-                crash()
+                if hs >= 1:
+                    print("human used a shield")
+                    hs -= 1
+                    doged -=5
+                    thing_starty = 0 - thing_height
+                else:
+                    crash()
+                
 
         #crash with red block
         if y < r_block_y + r_height:
@@ -250,23 +283,28 @@ def game_loop():
         if aiX > thing_startx - 100:
             if aiX < thing_startx + thing_width + 100:
                 if thing_startx - 100 > 800 - 100 - thing_startx - thing_width:
-                    aiX_change -= 5
+                    aiX_change -= 2
                 else:
-                    aiX_change += 5
+                    aiX_change += 2
             else:
                 aiX_change = 0
         else:
             aiX_change = 0
 
         aiX += aiX_change
-        # gameDisplay.fill(white)
 
         
         ai_things_doged(aiDoged)
         aiCar(aiX, aiY)
 
         if aiX > display_width - car_width or aiX < 0:
-            crash()
+            if ais >=1:
+                print("ai used a shield")
+                ais -=1
+                aiDoged -=5
+                thing_starty = 0 - thing_height
+            else:
+                crash()
             pygame.quit()
             # python   quit
             quit()
@@ -285,7 +323,7 @@ def game_loop():
             if aiX > r_block_x and aiX < r_block_x + r_width or aiX + car_width > r_block_x and aiX + car_width < r_block_x + r_width:
                 #print('x cross over')
                 aiDoged = aiDoged - 2
-                r_block_y = -2000
+                r_block_y =0 - 2000
                 r_block_x = random.randrange(0 , display_width)
 
         #points for ai
@@ -297,6 +335,8 @@ def game_loop():
                 yellow_b_y = -3000
                 yellow_b_x = random.randrange(0 , display_width)   
 
+        #shield        
+        hs,ais = sheild(doged,aiDoged)
         # red or yellow block pass without being catched
         if yellow_b_y > display_height:
             yellow_b_y = -3000
@@ -310,7 +350,13 @@ def game_loop():
             if aiX > thing_startx and aiX < thing_startx + thing_width or aiX + car_width > thing_startx and aiX + car_width < thing_startx + thing_width:
                 # print('x cross over')
                 print('game over')
-                crash()
+                if ais >=1:
+                    ais -=1
+                    aiDoged -=10
+                    print("ai used a shield")
+                    thing_starty = 0 - thing_height
+                else:
+                    crash()
                 pygame.quit()
                 # python   quit
                 quit()
