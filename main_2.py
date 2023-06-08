@@ -17,6 +17,10 @@ button_w = 160
 button_h = 60
 # to change the speed of the blocks
 speed = 7
+def ruleevalationAssessment(display_h,display_w,pos):
+    h=[800,700]
+    w=[600,500]
+    return h,w
 
 # setting up the game window size
 gameDisplay = pygame.display.set_mode((display_width, display_height))
@@ -465,7 +469,7 @@ def game_loop():
         else:
             pos['b'] = 't'
 
-        left, right = ruleEvalationAssessment(fuzzydisb, fuzzydisy,pos)
+        left, right = ruleevalationAssessment(fuzzydisb, fuzzydisy,pos)
         conAssessment = defuzzificationAssessment(left[0],right[0])
         change = (conAssessment-aiX)
         if (change>0):
