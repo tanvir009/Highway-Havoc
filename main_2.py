@@ -24,6 +24,9 @@ gameDisplay = pygame.display.set_mode((display_width, display_height))
 # Audio files
 car_crash_sound = pygame.mixer.Sound("media/car_crash.wav")
 car_start_sound = pygame.mixer.Sound("media/car_start.wav")
+point_sound = pygame.mixer.Sound("media/mixkit-fairy-arcade-sparkle-866.wav")
+red_sound = pygame.mixer.Sound("media/mixkit-failure-arcade-alert-notification-240.wav")
+shield_sound =pygame.mixer.Sound("media/crash-6711.mp3")
 #pygame.mixer.music.load("media/game_music.wav")
 pygame.mixer.music.load("media/jazz.wav")
 # defining colours
@@ -80,6 +83,107 @@ def button(text, x, y, w, h, inactive_color, active_color, action=None):
         pygame.draw.rect(gameDisplay, inactive_color, (x, y, w, h))
     message(text, 22, white, (x + w / 2, y + h / 2))
 
+
+
+
+
+#FUZZY for AIcar
+#distance from points
+def getMembershipdist_y(dis):
+    degree = {}
+
+    if dis < 0 or dis > 800:
+        degree["l"] = 0
+        degree["h"] = 0
+        
+    elif dis <= 350:
+        degree["l"] = 1
+        degree["h"] = 0
+        
+    elif dis >350 and dis < 450:
+        degree["l"] = float((450-dis)/(450-350))
+        degree["h"] = float((dis-350)/(450-350))
+    elif dis >= 550 and dis <= 800:
+        degree["l"] = 0
+  
+        degree["h"] = 1
+        
+    return degree
+#distance from blocks
+def getMembershipdist_b(dis):
+    degree = {}
+
+    if dis < 0 or dis > 800:
+        degree["l"] = 0
+        degree["h"] = 0
+        
+
+    elif dis <=350:
+        degree["l"] = 1
+        degree["h"] = 0
+        
+    elif dis >350 and dis < 450:
+        degree["l"] = float((450-dis)/(450-350))
+        degree["h"] = float((dis-350)/(450-350))
+    
+    elif dis >= 450 and dis <=800:
+        degree["l"] = 0
+        degree["h"] = 1
+
+
+    return degree
+#evaluation rules
+def ruleEvalationAssessment(dis_b, dis_y,pos):
+    left = []
+    right = []
+    
+    if (dis_y['l'] >= dis_b['h']) and (pos['b']=='r' and pos['y']=='l'):
+        left.append(dis_y['l'])
+    else:
+        left.append(dis_b['h'])
+    
+    if (dis_y['l'] >= dis_b['h']) and (pos['b']=='l' and pos['y']=='r'):
+        right.append(dis_y['l'])
+    else:
+        right.append(dis_b['h'])
+    
+    if (dis_y['l'] >= dis_b['h']) and (pos['b']=='r' and pos['y']=='r'):
+        right.append(dis_y['l'])
+    else:
+        right.append(dis_b['h'])
+
+    if (dis_y['l'] <= dis_b['h']) and (pos['b']=='r' and pos['y']=='r'):
+        right.append(dis_y['l'])
+    else:
+        right.append(dis_b['h'])
+    
+    if (dis_y['l'] >= dis_b['h']) and (pos['b']=='r' and pos['y']=='l'):
+        left.append(dis_y['l'])
+    else:
+        left.append(dis_b['h'])
+    
+    if (dis_y['l'] >= dis_b['h']) and (pos['b']=='l' and pos['y']=='r'):
+        right.append(dis_y['l'])
+    else:
+        right.append(dis_b['h'])
+    
+
+    left.sort(reverse=True)
+    right.sort(reverse=True)
+        
+    
+
+    return left,right
+#defuzzificationAssessment
+def defuzzificationAssessment(left,right):
+
+    #divide break (0-800) into 10 part
+    #0-300,400-800
+    cog = (((0+100+200+300)*left)+((400+500+600+700+800)*right))/(1+4*left+5*right)
+    return cog
+
+
+
 # to show the position of car
 def car(x, y):
     gameDisplay.blit(carImg, (x, y))
@@ -110,7 +214,7 @@ def ai_things_doged(count):
     gameDisplay.blit(text, (100, 0))
 
 #shield
-def sheild(c1,c2):
+def shield(c1,c2):
     hs = 0
     ais = 0
     font = pygame.font.SysFont(None, 25)
@@ -120,9 +224,9 @@ def sheild(c1,c2):
         hs += math.floor(m)
     elif n >= 1:
         ais += math.floor(n)
-    text1 = font.render("Human_Shield : " + str(hs), True, blue)
+    text1 = font.render("Human_Shield : " + str(hs), True, white)
     gameDisplay.blit(text1, (0, 20))
-    text2 = font.render("AI_Shield : " + str(ais), True, blue)
+    text2 = font.render("AI_Shield : " + str(ais), True, white)
     gameDisplay.blit(text2, (0, 40))
     return hs,ais
 
@@ -139,7 +243,7 @@ def things(thingx, thingy, thingh, thingw, color):
 
 #yellow point blocks
 def yellow_b(thingx, thingy, thingh, thingw, color):
-    pygame.draw.rect(gameDisplay, color, [thingx, thingy, thingh, thingw])
+    pygame.draw.circle(gameDisplay, color, (thingx,thingy), thingh/3, width=0)
 
 #to show red blocks
 def r_block(thingx, thingy, thingh, thingw, color):
@@ -198,7 +302,7 @@ def game_loop():
     yellow_b_y = -2000
     yellow_b_x = random.randrange(0, display_width)
     y_width = r_width/2
-    y_height = r_height/3
+    y_height = y_width
     thing_starty = -600
     thing_speed = speed
     thing_width = 100
@@ -250,6 +354,7 @@ def game_loop():
 
         if x > display_width - car_width or x < 0:
             if hs >= 1:
+                pygame.mixer.Sound.play(shield_sound)
                 print("human used a shield")
                 hs -= 1
                 doged -= 5
@@ -266,17 +371,21 @@ def game_loop():
             if x > thing_startx and x < thing_startx + thing_width or x + car_width > thing_startx and x + car_width < thing_startx + thing_width:
                 print('x cross over')
                 if hs >= 1:
+                    pygame.mixer.Sound.play(shield_sound)
                     print("human used a shield")
                     hs -= 1
                     doged -=5
                     thing_starty = 0 - thing_height
                 else:
                     crash(1)
+                    pygame.quit()
+                    quit()
                 
 
         #crash with red block
         if y < r_block_y + r_height:
             if x > r_block_x and x < r_block_x + r_width or x + car_width > r_block_x and x + car_width < r_block_x + r_width:
+                pygame.mixer.Sound.play(red_sound)
                 doged=doged-2
                 r_block_y = -2000
                 r_block_x = random.randrange(0 , display_width)
@@ -285,6 +394,7 @@ def game_loop():
             
             if x > yellow_b_x and x < yellow_b_x + y_width or x + car_width > yellow_b_x and x + car_width < yellow_b_x + y_width:
                 #print('x cross over')
+                pygame.mixer.Sound.play(point_sound)
                 doged=doged+5
                 yellow_b_y = -3000
                 yellow_b_x = random.randrange(0 , display_width)
@@ -314,6 +424,7 @@ def game_loop():
 
         if aiX > display_width - car_width or aiX < 0:
             if ais >=1:
+                pygame.mixer.Sound.play(shield_sound)
                 print("ai used a shield")
                 ais -=1
                 aiDoged -=5
@@ -331,12 +442,44 @@ def game_loop():
             thing_startx = random.randrange(0, display_width)
             thing_width = random.randrange(100, 150)
             aiDoged = aiDoged + 1 # ai_things_doged(aiDoged)
+
+        #FUZZY
+        aiX_new=0
+        dis_b= abs(aiX - thing_startx)
+        dis_y =abs(aiX - yellow_b_x)
+
+        fuzzydisb = getMembershipdist_b(dis_b)
+        fuzzydisy = getMembershipdist_y(dis_y)
+        pos = {}
+        if aiX+car_width <= yellow_b_x:
+            pos['y'] = 'r'
+        elif yellow_b_x + 100 <= aiX:
+            pos['y'] ='l'
+        else:
+            pos['y'] = 't'
+
+        if aiX+car_width < thing_startx:
+            pos['b'] = 'r'
+        elif thing_startx + thing_width < aiX:
+            pos['b'] ='l'
+        else:
+            pos['b'] = 't'
+
+        left, right = ruleEvalationAssessment(fuzzydisb, fuzzydisy,pos)
+        conAssessment = defuzzificationAssessment(left[0],right[0])
+        change = (conAssessment-aiX)
+        if (change>0):
+            aiX_new +=change
+        else:
+            aiX_new-=change
+
         
         #ai with red block
         if aiY < r_block_y + r_height:
             #print("y cross over")
             if aiX > r_block_x and aiX < r_block_x + r_width or aiX + car_width > r_block_x and aiX + car_width < r_block_x + r_width:
                 #print('x cross over')
+                pygame.mixer.Sound.play(red_sound)
                 aiDoged = aiDoged - 2
                 r_block_y =0 - 2000
                 r_block_x = random.randrange(0 , display_width)
@@ -346,6 +489,7 @@ def game_loop():
             
             if aiX > yellow_b_x and aiX < yellow_b_x + y_width or aiX + car_width > yellow_b_x and aiX + car_width < yellow_b_x + y_width:
                 #print('x cross over')
+                pygame.mixer.Sound.play(point_sound)
                 aiDoged = aiDoged+5
                 yellow_b_y = -3000
                 yellow_b_x = random.randrange(0 , display_width)  
@@ -353,7 +497,7 @@ def game_loop():
         
 
         #shield        
-        hs,ais = sheild(doged,aiDoged)
+        hs,ais = shield(doged,aiDoged)
         # red or yellow block pass without being catched
         if yellow_b_y > display_height:
             yellow_b_y = -3000
@@ -369,6 +513,7 @@ def game_loop():
                 print('game over')
                 if ais >=1:
                     ais -=1
+                    pygame.mixer.Sound.play(shield_sound)
                     aiDoged -=10
                     print("ai used a shield")
                     thing_starty = 0 - thing_height
