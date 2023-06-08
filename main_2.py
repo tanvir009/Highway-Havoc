@@ -12,7 +12,7 @@ def quitgame():
 
 # size of the display window
 display_width = 800
-display_height = 600
+display_height = 700
 button_w = 160
 button_h = 60
 # to change the speed of the blocks
@@ -24,8 +24,8 @@ gameDisplay = pygame.display.set_mode((display_width, display_height))
 # Audio files
 car_crash_sound = pygame.mixer.Sound("media/car_crash.wav")
 car_start_sound = pygame.mixer.Sound("media/car_start.wav")
-pygame.mixer.music.load("media/game_music.wav")
-
+#pygame.mixer.music.load("media/game_music.wav")
+pygame.mixer.music.load("media/jazz.wav")
 # defining colours
 black = (0, 0, 0)
 white = (255, 255, 255)
@@ -45,13 +45,16 @@ clock = pygame.time.Clock()
 
 aiCarImg = pygame.image.load('media/ai_car.png')
 carImg = pygame.image.load('media/hCar.png')
+imgroad = pygame.image.load('media/road1.jpg').convert_alpha()
+imgroad = pygame.transform.scale(imgroad, (display_width, display_height*3))
 
 def unpause():
     global pause
     pause = False
     pygame.mixer.music.unpause()
 
-
+def road(roady):
+    gameDisplay.blit(imgroad, (0, roady))
 def paused():
     pygame.mixer.music.pause()
     while pause:
@@ -197,6 +200,8 @@ def game_loop():
     thing_height = 100
     doged = 0
     aiDoged = 0
+    roady = 0
+    roadyo = -680
     # initially we are not crashed
     gameExit = False
 
@@ -217,8 +222,15 @@ def game_loop():
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                     x_change = 0
         x += x_change
-        gameDisplay.fill(green)
-
+        #gameDisplay.fill(green)
+        roady += 8
+        if roady > display_height:
+            roady = 0
+            roadyo = -680
+        if roady > 0:
+            gameDisplay.blit(imgroad, (0, roady))
+            roadyo += 8
+            road(roadyo)
 
         
         things(thing_startx, thing_starty, thing_width, thing_height, black)
