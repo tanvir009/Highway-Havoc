@@ -160,10 +160,15 @@ def message_display(text):
 
 
 # when you crashed into a block
-def crash():
+def crash(loser):
     #message_display("You Crashed")
-    message('You Loss AI WIN!', 48, bright_red, (display_width / 2, display_height / 4))
-    pygame.mixer.Sound.play(car_crash_sound)
+    if loser == 1:
+        message('You Loss AI WIN!', 48, bright_red, (display_width / 2, display_height / 4))
+        pygame.mixer.Sound.play(car_crash_sound)
+    else:
+        message('AI Loss You WIN!', 48, bright_red, (display_width / 2, display_height / 4))
+        pygame.mixer.Sound.play(car_crash_sound)
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -249,7 +254,7 @@ def game_loop():
                 hs -= 1
                 doged -= 5
             else:
-                crash()
+                crash(1)
         # by this we know that the block is off the screen
         if thing_starty > display_height:
             if doged % 10 == 0:
@@ -266,14 +271,12 @@ def game_loop():
                     doged -=5
                     thing_starty = 0 - thing_height
                 else:
-                    crash()
+                    crash(1)
                 
 
         #crash with red block
         if y < r_block_y + r_height:
-            #print("y cross over")
             if x > r_block_x and x < r_block_x + r_width or x + car_width > r_block_x and x + car_width < r_block_x + r_width:
-                #print('x cross over')
                 doged=doged-2
                 r_block_y = -2000
                 r_block_x = random.randrange(0 , display_width)
@@ -292,12 +295,12 @@ def game_loop():
         print('thing start: ', thing_startx)
         print('thing end: ', thing_startx + thing_width)
         print('car : ', aiX)
-        if aiX > thing_startx - 100:
+        if aiX > thing_startx - 100 and thing_starty + thing_height + 100 < aiY :
             if aiX < thing_startx + thing_width + 100:
                 if thing_startx - 100 > 800 - 100 - thing_startx - thing_width:
-                    aiX_change -= 2
+                    aiX_change = -4
                 else:
-                    aiX_change += 2
+                    aiX_change = 4
             else:
                 aiX_change = 0
         else:
@@ -316,7 +319,7 @@ def game_loop():
                 aiDoged -=5
                 thing_starty = 0 - thing_height
             else:
-                crash()
+                crash(0)
             pygame.quit()
             # python   quit
             quit()
@@ -345,7 +348,9 @@ def game_loop():
                 #print('x cross over')
                 aiDoged = aiDoged+5
                 yellow_b_y = -3000
-                yellow_b_x = random.randrange(0 , display_width)   
+                yellow_b_x = random.randrange(0 , display_width)  
+
+        
 
         #shield        
         hs,ais = sheild(doged,aiDoged)
@@ -368,7 +373,7 @@ def game_loop():
                     print("ai used a shield")
                     thing_starty = 0 - thing_height
                 else:
-                    crash()
+                    crash(0)
                 pygame.quit()
                 # python   quit
                 quit()
