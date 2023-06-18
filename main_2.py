@@ -107,7 +107,7 @@ def getMembershipdist_y(dis):
     elif dis >350 and dis < 450:
         degree["l"] = float((450-dis)/(450-350))
         degree["h"] = float((dis-350)/(450-350))
-    elif dis >= 550 and dis <= 800:
+    elif dis >= 450 and dis <= 800:
         degree["l"] = 0
   
         degree["h"] = 1
